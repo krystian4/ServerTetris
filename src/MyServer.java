@@ -1,9 +1,14 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class MyServer {
-    private int port;
+    private final int port;
     private ServerSocket serverSocket;
+    public static ArrayList<String> logins = new ArrayList<>();
+    public static ArrayList<String> passwords = new ArrayList<>();
+    public static ArrayList<Integer> isUserLogged = new ArrayList<>();
+    public static ArrayList<String> userHighscore = new ArrayList<>();
 
     public static void main(String[] args) {
        MyServer Server = new MyServer(4444);
@@ -22,7 +27,7 @@ public class MyServer {
     }
 
     private void handleUsers() {
-        Socket socket = null;
+        Socket socket;
         while(true){
             try {
                 socket = serverSocket.accept();
