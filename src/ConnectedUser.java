@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ConnectedUser extends Thread{
     private Socket socket;
@@ -36,16 +37,78 @@ public class ConnectedUser extends Thread{
             //listen for users data
             try {
                 userData = receive.readUTF();
-            } catch (IOException e) {
+            }
+            catch (SocketException e){
+                try{
+                    System.out.println("User disconnected");
+                    socket.close();
+                    isUserConnected = false;
+                    return;
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
-            if (userData != null){
-                System.out.println(userData);
+
+            System.out.println(userData);
+            switch (userData){
+                case "login":{
+                    loginUser();
+                    break;
+                }
+                case "register":{
+                    registerUser();
+                    break;
+                }
+                default:
+                    System.out.println("Not recognized command!");
+                    break;
             }
-            else{
-                System.out.println("Received null");
-            }
+
+
 
         }
     }
+
+    private void registerUser() {
+        try {
+            String email = receive.readUTF();
+            String login = receive.readUTF();
+            String password = receive.readUTF();
+
+            System.out.println("Email: " + email);
+            System.out.println("Login: " + login);
+            System.out.println("Password: " + password);
+            if(login.equals("bad") && password.equals("bad") ){
+                send.writeUTF("0");
+            }
+            else{
+                send.writeUTF("1");
+            }
+            send.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loginUser() {
+        try {
+            String login = receive.readUTF();
+            String password = receive.readUTF();
+            System.out.println("Login: " + login);
+            System.out.println("Password: " + password);
+            if(login.equals("bad") && password.equals("bad") ){
+                send.writeUTF("0");
+            }
+            else{
+                send.writeUTF("1");
+            }
+            send.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
