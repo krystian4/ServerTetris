@@ -135,7 +135,7 @@ public class ConnectedUser extends Thread{
                         send.writeUTF("1");
                         System.out.println("Logging in");
                         send.writeUTF(MyServer.userHighscore.get(id));
-                        System.out.println("Wyslano hs");
+                        System.out.println("Highscore sent");
                         MyServer.isUserLogged.set(id, 1);
                     }
                     else{
