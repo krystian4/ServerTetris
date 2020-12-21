@@ -10,11 +10,14 @@ public class ConnectedUser extends Thread{
     private DataInputStream receive;
     private boolean isUserConnected;
     private int id;
+    private String login;
+    private MySQLConnection dataBase;
 
     public ConnectedUser(Socket socket) {
         this.socket = socket;
         System.out.println("Connection from: " + socket.getInetAddress());
 
+        dataBase = new MySQLConnection();
         try {
             //output stream for sending data to client
             send = new DataOutputStream(socket.getOutputStream());
@@ -43,8 +46,9 @@ public class ConnectedUser extends Thread{
                 try{
                     System.out.println("User disconnected");
                     socket.close();
+                    dataBase.closeConnection();
                     isUserConnected = false;
-                    MyServer.isUserLogged.set(id, 0);
+                    MyServer.loggedUsersIDs.remove((Object) id);
                     return;
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
@@ -81,7 +85,8 @@ public class ConnectedUser extends Thread{
     private void updateHighScore() {
         try {
             String highscore = receive.readUTF();
-            MyServer.userHighscore.set(id, highscore);
+            dataBase.updateUserHighscore(id, highscore);
+            dataBase.updateRanking(login, highscore);
             System.out.println("Highscore updated: " + highscore);
         } catch (IOException e) {
             e.printStackTrace();
@@ -98,11 +103,8 @@ public class ConnectedUser extends Thread{
             System.out.println("Login: " + login);
             System.out.println("Password: " + password);
 
-            if(MyServer.logins.indexOf(login) == -1){
-                MyServer.logins.add(login);
-                MyServer.passwords.add(password);
-                MyServer.isUserLogged.add(0);
-                MyServer.userHighscore.add("0");
+            if(!dataBase.isLoginTaken(login)){
+                dataBase.addUser(login, password, email);
                 send.writeUTF("1");
             }
             else{
@@ -118,34 +120,36 @@ public class ConnectedUser extends Thread{
 
     private void loginUser() {
         try {
-            String login = receive.readUTF();
+            login = receive.readUTF();
             String password = receive.readUTF();
             System.out.println("Login: " + login);
             System.out.println("Password: " + password);
-            MyServer.logins.indexOf(login);
 
-            id = MyServer.logins.indexOf(login);
+            id = dataBase.getUserID(login);
+
+
             System.out.println("Index of login: " + id);
 
             if(id > -1){
                 System.out.println("Authorization...");
-                if(password.equals(MyServer.passwords.get(id))){
+                if(dataBase.authorizeUser(login, password)){
                     System.out.println("Authorization complete");
-                    if(MyServer.isUserLogged.get(id) == 0){
-                        send.writeUTF("1");
-                        System.out.println("Logging in");
-                        send.writeUTF(MyServer.userHighscore.get(id));
-                        System.out.println("Highscore sent");
-                        MyServer.isUserLogged.set(id, 1);
-                    }
-                    else{
+
+                    if(MyServer.loggedUsersIDs.contains(id)){
                         System.out.println("Already logged in");
                         send.writeUTF("0");
+                    }
+                    else{
+                        send.writeUTF("1");
+                        System.out.println("Logging in");
+                        send.writeUTF(dataBase.getUserHighscore(id));
+                        System.out.println("Highscore sent");
+                        MyServer.loggedUsersIDs.add(id);
                     }
                 }
                 else{
                     System.out.println("Wrong password or login.");
-                    send.writeUTF("0");
+                    send.writeUTF("-1");
                 }
             }
             else{

@@ -5,10 +5,7 @@ import java.util.ArrayList;
 public class MyServer {
     private final int port;
     private ServerSocket serverSocket;
-    public static ArrayList<String> logins = new ArrayList<>();
-    public static ArrayList<String> passwords = new ArrayList<>();
-    public static ArrayList<Integer> isUserLogged = new ArrayList<>();
-    public static ArrayList<String> userHighscore = new ArrayList<>();
+    public static ArrayList<Integer> loggedUsersIDs = new ArrayList<>();
 
     public static void main(String[] args) {
        MyServer Server = new MyServer(4444);
