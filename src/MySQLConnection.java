@@ -156,6 +156,9 @@ public class MySQLConnection {
             while(rs.next()){
                 int rsScore = rs.getInt("score");
                 String rsLogin = rs.getString("login");
+                if(rsScore == hscore && rsLogin.equals(login)){
+                    return;
+                }
                 if(rsScore < hscore){
                     rs.updateString("login", login);
                     rs.updateInt("score", hscore);
