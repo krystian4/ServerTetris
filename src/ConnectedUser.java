@@ -3,6 +3,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ConnectedUser extends Thread{
     private final Socket socket;
@@ -29,7 +31,6 @@ public class ConnectedUser extends Thread{
             e.printStackTrace();
         }
     }
-
 
     @Override
     public void run() {
@@ -72,6 +73,11 @@ public class ConnectedUser extends Thread{
                     updateHighScore();
                     break;
                 }
+                case "ranking":{
+                    sendRanking();
+
+                    break;
+                }
                 default:
                     System.out.println("Not recognized command!:" + userData);
                     break;
@@ -80,6 +86,21 @@ public class ConnectedUser extends Thread{
 
 
         }
+    }
+
+    private void sendRanking() {
+        ArrayList<String> ranking = dataBase.getRanking();
+        Iterator iter = ranking.iterator();
+
+        try{
+            while(iter.hasNext()){
+                send.writeUTF((String) iter.next());
+            }
+            send.writeUTF("end");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void updateHighScore() {
@@ -127,7 +148,6 @@ public class ConnectedUser extends Thread{
 
             id = dataBase.getUserID(login);
 
-
             System.out.println("Index of login: " + id);
 
             if(id > -1){
@@ -154,7 +174,7 @@ public class ConnectedUser extends Thread{
             }
             else{
                 System.out.println("No login in the system");
-                send.writeUTF("0");
+                send.writeUTF("-1");
             }
             send.flush();
         } catch (IOException e) {

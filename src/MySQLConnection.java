@@ -1,21 +1,21 @@
 import java.sql.*;
+import java.util.ArrayList;
 
 
 public class MySQLConnection {
     private Connection conn = null;
     private String url = "jdbc:mysql://localhost:3306/";
     private String dbName = "tetris";
-    private String driver = "com.mysql.jdbc.Driver";
     private String username = "root";
+
     public MySQLConnection() {
         try {
-            Class.forName(driver);
             conn = DriverManager.getConnection(url+dbName, username, "");
             System.out.println("Connected to database");
+            createTop10ranking();
         } catch (Exception e){
             e.printStackTrace();
         }
-        createTop10ranking();
     }
 
     private void createTop10ranking() {
@@ -159,7 +159,7 @@ public class MySQLConnection {
                 if(rsScore == hscore && rsLogin.equals(login)){
                     return;
                 }
-                if(rsScore < hscore){
+                if(rsScore <= hscore){
                     rs.updateString("login", login);
                     rs.updateInt("score", hscore);
                     rs.updateRow();
@@ -174,4 +174,27 @@ public class MySQLConnection {
             throwables.printStackTrace();
         }
     }
+
+    public ArrayList<String> getRanking(){
+        ArrayList<String> ranking = new ArrayList<>();
+        String query = "SELECT * FROM `top_ten_score`";
+        Statement st = null;
+        try {
+            st = conn.createStatement();
+            ResultSet rs = st.executeQuery(query);
+            while(rs.next()){
+                int id = rs.getInt("id");
+                String login = rs.getString("login");
+                String score = Integer.toString(rs.getInt("score"));
+                String oneRow = id + ".  Score: " + score + "\t" + login;
+                System.out.println(oneRow);
+                ranking.add(oneRow);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return ranking;
+    }
+
 }
+
